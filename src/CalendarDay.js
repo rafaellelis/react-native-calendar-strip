@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import PropTypes from "prop-types";
-import { getISODay, isSameDay } from "date-fns";
+import { getDate, getISODay, isSameDay } from "date-fns";
 import { isBetweenOnlyDays, formataData } from "./helper";
 
 import styles from "./Calendar.style.js";
@@ -520,7 +520,7 @@ class CalendarDay extends Component {
                   style={[{ fontSize: dateNumberFontSize }, _dateNumberStyle]}
                   allowFontScaling={allowDayTextScaling}
                 >
-                  {date}
+                  {getDate(date)}
                 </Text>
                 {this.renderMarking()}
               </View>
