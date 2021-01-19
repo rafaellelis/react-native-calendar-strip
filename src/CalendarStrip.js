@@ -211,7 +211,7 @@ class CalendarStrip extends Component {
   setLocale = date => {
     let _date = date;
     if (date) {
-      _date = setHours(12); // keep date the same regardless of timezone shifts
+      _date = setHours(date, 12); // keep date the same regardless of timezone shifts
       if (this.props.locale) {
         _date = parse(format(_date, 'YYYY-MM-DD'), 'YYYY-MM-DD', new Date(), {locale: ptBR});
       }
