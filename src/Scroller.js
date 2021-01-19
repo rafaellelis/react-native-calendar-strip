@@ -8,8 +8,9 @@
 import React, { Component } from "react";
 import { View } from "react-native";
 import PropTypes from "prop-types";
+import { addDays, isSameDay, isSameMonth, isSameWeek, subDays } from "date-fns";
 import { RecyclerListView, DataProvider, LayoutProvider } from "recyclerlistview";
-import moment from "moment";
+import { isAfterDay, isBeforeDay } from "./helper";
 
 export default class CalendarScroller extends Component {
   static propTypes = {
@@ -118,21 +119,21 @@ export default class CalendarScroller extends Component {
 
   // Scroll to given date, and check against min and max date if available.
   scrollToDate = (date) => {
-    let targetDate = moment(date);
+    let targetDate = date;
     const {
       minDate,
       maxDate,
     } = this.props;
 
     // Falls back to min or max date when the given date exceeds the available dates
-    if (minDate && targetDate.isBefore(minDate, "day")) {
+    if (minDate && isBeforeDay(targetDate, minDate)) {
       targetDate = minDate;
-    } else if (maxDate && targetDate.isAfter(maxDate, "day")) {
+    } else if (maxDate && isAfterDay(targetDate, maxDate)) {
       targetDate = maxDate;
     }
 
     for (let i = 0; i < this.state.data.length; i++) {
-      if (this.state.data[i].date.isSame(targetDate, "day")) {
+      if (isSameDay(this.state.data[i].date, targetDate)) {
         this.rlv.scrollToIndex(i, true);
         break;
       }
@@ -141,16 +142,14 @@ export default class CalendarScroller extends Component {
 
   // Shift dates when end of list is reached.
   shiftDaysForward = (visibleStartDate = this.state.visibleStartDate) => {
-    const prevVisStart = visibleStartDate.clone();
-    const newStartDate = prevVisStart.clone().subtract(Math.floor(this.state.numDays / 3), "days");
-    this.updateDays(prevVisStart, newStartDate);
+    const newStartDate = subDays(visibleStartDate, Math.floor(this.state.numDays / 3));
+    this.updateDays(visibleStartDate, newStartDate);
   }
 
   // Shift dates when beginning of list is reached.
   shiftDaysBackward = (visibleStartDate) => {
-    const prevVisStart = visibleStartDate.clone();
-    const newStartDate = prevVisStart.clone().subtract(Math.floor(this.state.numDays * 2/3), "days");
-    this.updateDays(prevVisStart, newStartDate);
+    const newStartDate = subDays(visibleStartDate, Math.floor(this.state.numDays * 2/3));
+    this.updateDays(visibleStartDate, newStartDate);
   }
 
   updateDays = (prevVisStart, newStartDate) => {
@@ -163,12 +162,12 @@ export default class CalendarScroller extends Component {
     } = this.props;
     const data = [];
     let _newStartDate = newStartDate;
-    if (minDate && newStartDate.isBefore(minDate, "day")) {
-      _newStartDate = moment(minDate);
+    if (minDate && isBeforeDay(newStartDate, minDate)) {
+      _newStartDate = minDate;
     }
     for (let i = 0; i < this.state.numDays; i++) {
-      let date = _newStartDate.clone().add(i, "days");
-      if (maxDate && date.isAfter(maxDate, "day")) {
+      let date = addDays(_newStartDate, i);
+      if (maxDate && isAfterDay(date, maxDate)) {
         break;
       }
       data.push({date});
@@ -180,7 +179,7 @@ export default class CalendarScroller extends Component {
 
     // Scroll to previous date
     for (let i = 0; i < data.length; i++) {
-      if (data[i].date.isSame(prevVisStart, "day")) {
+      if (isSameDay(data[i].date, prevVisStart)) {
         this.shifting = true;
         this.rlv.scrollToIndex(i, false);
         // RecyclerListView sometimes returns position to old index after
@@ -209,9 +208,9 @@ export default class CalendarScroller extends Component {
       visibleEndDate: _visEndDate,
     } = this.state;
     const visibleStartIndex = all[0];
-    const visibleStartDate = data[visibleStartIndex] ? data[visibleStartIndex].date : moment();
+    const visibleStartDate = data[visibleStartIndex] ? data[visibleStartIndex].date : new Date();
     const visibleEndIndex = Math.min(visibleStartIndex + numVisibleItems - 1, data.length - 1);
-    const visibleEndDate = data[visibleEndIndex] ? data[visibleEndIndex].date : moment();
+    const visibleEndDate = data[visibleEndIndex] ? data[visibleEndIndex].date : new Date();
 
     const {
       updateMonthYear,
@@ -221,14 +220,12 @@ export default class CalendarScroller extends Component {
     // Fire month/year update on both week and month changes.  This is
     // necessary for the header and onWeekChanged updates.
     if (!_visStartDate || !_visEndDate ||
-        !visibleStartDate.isSame(_visStartDate, "week") ||
-        !visibleEndDate.isSame(_visEndDate, "week") ||
-        !visibleStartDate.isSame(_visStartDate, "month") ||
-        !visibleEndDate.isSame(_visEndDate, "month") )
+        !isSameWeek(visibleStartDate, _visStartDate) ||
+        !isSameWeek(visibleEndDate, _visEndDate) ||
+        !isSameMonth(visibleStartDate, _visStartDate) ||
+        !isSameMonth(visibleEndDate, _visEndDate) )
     {
-      const visStart = visibleStartDate && visibleStartDate.clone();
-      const visEnd = visibleEndDate && visibleEndDate.clone();
-      onWeekChanged && onWeekChanged(visStart, visEnd);
+      onWeekChanged && onWeekChanged(visibleStartDate, visibleEndDate);
     }
 
     // Always update weekstart/end for WeekSelectors.

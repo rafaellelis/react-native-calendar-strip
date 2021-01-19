@@ -1,7 +1,9 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { Text, TouchableOpacity } from "react-native";
+import { getMonth, getYear } from "date-fns";
 
+import { formataData } from './helper'
 import styles from "./Calendar.style.js";
 
 class CalendarHeader extends Component {
@@ -52,17 +54,17 @@ class CalendarHeader extends Component {
       }
     }
 
-    if (firstDay.month() === lastDay.month()) {
-      return firstDay.format(calendarHeaderFormat);
-    } else if (firstDay.year() !== lastDay.year()) {
-      return `${firstDay.format(calendarHeaderFormat)} / ${lastDay.format(
+    if (getMonth(firstDay) === getMonth(lastDay)) {
+      return formataData(firstDay, calendarHeaderFormat);
+    } else if (getYear(firstDay) !== getYear(lastDay)) {
+      return `${formataData(firstDay, calendarHeaderFormat)} / ${formataData(lastDay,
         calendarHeaderFormat
       )}`;
     }
 
     return `${
-      monthFormatting.length > 1 ? firstDay.format(monthFormatting) : ""
-    } ${monthFormatting.length > 1 ? "/" : ""} ${lastDay.format(
+      monthFormatting.length > 1 ? formataData(firstDay, monthFormatting) : ""
+    } ${monthFormatting.length > 1 ? "/" : ""} ${formataData(lastDay,
       calendarHeaderFormat
     )}`;
   }
@@ -75,13 +77,11 @@ class CalendarHeader extends Component {
       calendarHeaderStyle,
       fontSize,
       allowHeaderTextScaling,
-      weekStartDate: _weekStartDate,
-      weekEndDate: _weekEndDate,
+      weekStartDate,
+      weekEndDate,
       headerText,
     } = this.props;
     const _headerText = headerText || this.formatCalendarHeader(calendarHeaderFormat);
-    const weekStartDate = _weekStartDate && _weekStartDate.clone();
-    const weekEndDate = _weekEndDate && _weekEndDate.clone();
 
     return (
       <TouchableOpacity

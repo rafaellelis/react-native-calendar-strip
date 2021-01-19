@@ -5,9 +5,11 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { View, Animated, PixelRatio } from "react-native";
+import ptBR from "date-fns/locale/pt-BR";
 
-import moment from "moment";
+import { addDays, addWeeks, differenceInDays, format, isSameDay, parse, setHours, setISODay, startOfDay, startOfISOWeek, subDays, subWeeks } from "date-fns";
 
+import { isBeforeDay, isAfterDay, formataData } from './helper'
 import CalendarHeader from "./CalendarHeader";
 import CalendarDay from "./CalendarDay";
 import WeekSelector from "./WeekSelector";
@@ -120,18 +122,18 @@ class CalendarStrip extends Component {
     super(props);
     this.numDaysScroll = 366; // prefer even number divisible by 3
 
-    if (props.locale) {
-      if (props.locale.name && props.locale.config) {
-        moment.updateLocale(props.locale.name, props.locale.config);
-      } else {
-        throw new Error(
-          "Locale prop is not in the correct format. \b Locale has to be in form of object, with params NAME and CONFIG!"
-        );
-      }
-    }
+    // if (props.locale) {
+    //   if (props.locale.name && props.locale.config) {
+    //     moment.updateLocale(props.locale.name, props.locale.config);
+    //   } else {
+    //     throw new Error(
+    //       "Locale prop is not in the correct format. \b Locale has to be in form of object, with params NAME and CONFIG!"
+    //     );
+    //   }
+    // }
 
     const startingDate = this.getInitialStartingDate();
-    const selectedDate = this.setLocale(this.props.selectedDate);
+    const selectedDate = this.props.selectedDate;
 
     this.state = {
       startingDate,
@@ -193,13 +195,13 @@ class CalendarStrip extends Component {
     );
   }
 
-  // Check whether two datetimes are of the same value.  Supports Moment date,
+  // Check whether two datetimes are of the same value.  Supports 
   // JS date, or ISO 8601 strings.
   // Returns true if the datetimes values are the same; false otherwise.
   compareDates = (date1, date2) => {
     if (date1 && date1.valueOf && date2 && date2.valueOf)
     {
-      return moment(date1).isSame(date2, "day");
+      return isSameDay(date1, date2);
     } else {
       return JSON.stringify(date1) === JSON.stringify(date2);
     }
@@ -207,11 +209,11 @@ class CalendarStrip extends Component {
 
   //Function that checks if the locale is passed to the component and sets it to the passed date
   setLocale = date => {
-    let _date = date && moment(date);
-    if (_date) {
-      _date.set({ hour: 12}); // keep date the same regardless of timezone shifts
+    let _date = date;
+    if (date) {
+      _date = setHours(12); // keep date the same regardless of timezone shifts
       if (this.props.locale) {
-        _date = _date.locale(this.props.locale.name);
+        _date = parse(format(_date, 'YYYY-MM-DD'), 'YYYY-MM-DD', new Date(), {locale: ptBR});
       }
     }
     return _date;
@@ -223,8 +225,8 @@ class CalendarStrip extends Component {
     } else {
       // Fallback when startingDate isn't provided. However selectedDate
       // may also be undefined, defaulting to today's date.
-      let date = this.setLocale(moment(this.props.selectedDate));
-      return this.props.useIsoWeekday ? date.startOf("isoweek") : date;
+      let date = this.setLocale(this.props.selectedDate);
+      return this.props.useIsoWeekday ? startOfISOWeek(date) : date;
     }
   }
 
@@ -235,7 +237,7 @@ class CalendarStrip extends Component {
       return;
     }
     this.animations = [];
-    const previousWeekStartDate = this.state.startingDate.clone().subtract(1, "w");
+    const previousWeekStartDate = subWeeks(this.state.startingDate, 1);
     const days = this.createDays(previousWeekStartDate);
     this.setState({ startingDate: previousWeekStartDate, ...days });
   }
@@ -247,7 +249,7 @@ class CalendarStrip extends Component {
       return;
     }
     this.animations = [];
-    const nextWeekStartDate = this.state.startingDate.clone().add(1, "w");
+    const nextWeekStartDate = addWeeks(this.state.startingDate, 1);
     const days = this.createDays(nextWeekStartDate);
     this.setState({ startingDate: nextWeekStartDate, ...days });
   }
@@ -258,8 +260,8 @@ class CalendarStrip extends Component {
     if (!this.props.updateWeek) {
       return originalStartDate;
     }
-    let startingDate = moment(newStartDate).startOf("day");
-    let daysDiff = startingDate.diff(originalStartDate.startOf("day"), "days");
+    let startingDate = startOfDay(newStartDate);
+    let daysDiff = differenceInDays(startingDate, startOfDay(originalStartDate));
     if (daysDiff === 0) {
       return originalStartDate;
     }
@@ -282,8 +284,8 @@ class CalendarStrip extends Component {
     }
 
     this.animations = [];
-    let startingDate = moment(date);
-    startingDate = this.props.useIsoWeekday ? startingDate.startOf("isoweek") : startingDate;
+    let startingDate = date;
+    startingDate = this.props.useIsoWeekday ? startOfISOWeek(startingDate) : startingDate;
     const days = this.createDays(startingDate);
     this.setState({startingDate, ...days});
   }
@@ -301,11 +303,10 @@ class CalendarStrip extends Component {
       };
     }
     this.setState(newState);
-    const _selectedDate = selectedDate && selectedDate.clone();
-    this.props.onDateSelected && this.props.onDateSelected(_selectedDate);
+    this.props.onDateSelected && this.props.onDateSelected(selectedDate);
   }
 
-  // Get the currently selected date (Moment JS object)
+  // Get the currently selected date
   getSelectedDate = date => {
     if (!this.state.selectedDate || this.state.selectedDate.valueOf() === 0) {
       return; // undefined (no date has been selected yet)
@@ -315,12 +316,10 @@ class CalendarStrip extends Component {
 
   // Set the selected date.  To clear the currently selected date, pass in 0.
   setSelectedDate = date => {
-    let mDate = moment(date);
-    this.onDateSelected(mDate);
+    this.onDateSelected(date);
     if (this.props.scrollToOnSetSelectedDate) {
       // Scroll to selected date, centered in the week
-      const scrolledDate = moment(mDate);
-      scrolledDate.subtract(Math.floor(this.props.numDaysInWeek / 2), "days");
+      const scrolledDate = subDays(date, Math.floor(this.props.numDaysInWeek / 2));
       this.scroller.scrollToDate(scrolledDate);
     }
   }
@@ -460,9 +459,9 @@ class CalendarStrip extends Component {
     if (scrollable) {
       numDays = this.numDaysScroll;
       // Center start date in scroller.
-      _startingDate = startingDate.clone().subtract(numDays/2, "days");
-      if (minDate && _startingDate.isBefore(minDate, "day")) {
-        _startingDate = moment(minDate);
+      _startingDate = subDays(startingDate, numDays/2);
+      if (minDate && isBeforeDay(_startingDate, minDate)) {
+        _startingDate = minDate;
       }
     }
 
@@ -470,15 +469,15 @@ class CalendarStrip extends Component {
       let date;
       if (useIsoWeekday && !scrollable) {
         // isoWeekday starts from Monday
-        date = this.setLocale(_startingDate.clone().isoWeekday(i + 1));
+        date =  this.setLocale(setISODay(_startingDate, i + 1));
       } else {
-        date = this.setLocale(_startingDate.clone().add(i, "days"));
+        date = this.setLocale(addDays(_startingDate, i));
       }
       if (scrollable) {
-        if (maxDate && date.isAfter(maxDate, "day")) {
+        if (maxDate && isAfterDay(date, maxDate)) {
           break;
         }
-        if (date.isSame(startingDate, "day")) {
+        if (isSameDay(date, startingDate)) {
           initialScrollerIndex = i;
         }
         datesList.push({date});
@@ -486,7 +485,7 @@ class CalendarStrip extends Component {
       else {
         days.push(this.renderDay({
           date,
-          key: date.format("YYYY-MM-DD"),
+          key: formataData(date, "YYYY-MM-DD"),
           ...this.createDayProps(selectedDate),
         }));
         datesList.push({date});
@@ -505,9 +504,7 @@ class CalendarStrip extends Component {
       newState.weekStartDate = weekStartDate;
       newState.weekEndDate = weekEndDate;
 
-      const _weekStartDate = weekStartDate && weekStartDate.clone();
-      const _weekEndDate = weekEndDate && weekEndDate.clone();
-      onWeekChanged && onWeekChanged(_weekStartDate, _weekEndDate);
+      onWeekChanged && onWeekChanged(weekStartDate, weekEndDate);
     }
     // else Scroller sets weekStart/EndDate and fires onWeekChanged.
 

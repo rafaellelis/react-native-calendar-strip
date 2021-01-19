@@ -6,20 +6,20 @@
 
 import React, { Component } from 'react';
 import { View, Text } from "react-native";
+import { addDays, format, getISODay } from 'date-fns';
 import CalendarStrip from './CalendarStrip/CalendarStrip';
-import moment from 'moment';
 
-export default class App extends Component<{}> {
+export default class App extends Component {
   constructor(props) {
     super(props);
 
-    let startDate = moment(); // today
+    let startDate = new Date(); // today
 
     // Create a week's worth of custom date styles and marked dates.
     let customDatesStyles = [];
     let markedDates = [];
     for (let i=0; i<7; i++) {
-      let date = startDate.clone().add(i, 'days');
+      let date = addDays(startDate, i);
 
       customDatesStyles.push({
         startDate: date, // Single date since no endDate provided
@@ -62,11 +62,11 @@ export default class App extends Component<{}> {
   }
 
   datesBlacklistFunc = date => {
-    return date.isoWeekday() === 6; // disable Saturdays
+    return getISODay(date) === 6; // disable Saturdays
   }
 
   onDateSelected = date => {
-    this.setState({ formattedDate: date.format('YYYY-MM-DD')});
+    this.setState({ formattedDate: format(date, 'YYYY-MM-DD')});
   }
 
   render() {

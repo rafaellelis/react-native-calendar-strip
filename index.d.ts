@@ -1,11 +1,11 @@
 import { Component, ReactNode, ComponentProps, RefObject } from "react";
-import { Duration, Moment } from "moment";
 import {
   StyleProp,
   ViewStyle,
   TextStyle,
   GestureResponderEvent
 } from "react-native";
+import { Duration } from "date-fns";
 import { RecyclerListView } from 'recyclerlistview';
 
 interface IDaySelectionAnimationBorder {
@@ -53,7 +53,7 @@ interface IDayComponentProps {
   size: number;
   allowDayTextScaling?: boolean;
   markedDatesStyle?: TextStyle;
-  markedDates?: any[] | ((date: Moment) => void);
+  markedDates?: any[] | ((date: Date) => void);
 }
 
 type TDaySelectionAnimation =
@@ -61,8 +61,8 @@ type TDaySelectionAnimation =
   | IDaySelectionAnimationBackground;
 
 type TDateRange = {
-  start: Moment;
-  end: Moment;
+  start: Date;
+  end: Date;
 };
 
 interface CalendarStripProps {
@@ -74,18 +74,18 @@ interface CalendarStripProps {
   scrollable?: boolean;
   scrollerPaging?: boolean;
   externalScrollView?: ComponentProps<typeof RecyclerListView>['externalScrollView'];
-  startingDate?: Moment;
-  selectedDate?: Moment;
-  onDateSelected?: ((date: Moment) => void);
-  onWeekChanged?: ((start: Moment, end: Moment) => void);
-  onHeaderSelected?: ((dates: {weekStartDate: Moment, weekEndDate: Moment}) => void);
+  startingDate?: Date;
+  selectedDate?: Date;
+  onDateSelected?: ((date: Date) => void);
+  onWeekChanged?: ((start: Date, end: Date) => void);
+  onHeaderSelected?: ((dates: {weekStartDate: Date, weekEndDate: Date}) => void);
   updateWeek?: boolean;
   useIsoWeekday?: boolean;
-  minDate?: Moment;
-  maxDate?: Moment;
-  datesWhitelist?: TDateRange[] | ((date: Moment) => void);
-  datesBlacklist?: TDateRange[] | ((date: Moment) => void);
-  markedDates?: any[] | ((date: Moment) => void);
+  minDate?: Date;
+  maxDate?: Date;
+  datesWhitelist?: TDateRange[] | ((date: Date) => void);
+  datesBlacklist?: TDateRange[] | ((date: Date) => void);
+  markedDates?: any[] | ((date: Date) => void);
   scrollToOnSetSelectedDate?: boolean;
 
   showMonth?: boolean;
@@ -117,7 +117,7 @@ interface CalendarStripProps {
   };
   daySelectionAnimation?: TDaySelectionAnimation;
 
-  customDatesStyles?: any[] | ((date: Moment) => void);
+  customDatesStyles?: any[] | ((date: Date) => void);
 
   dayComponent?: (props: IDayComponentProps) => ReactNode;
 
@@ -144,8 +144,8 @@ interface CalendarStripProps {
 
 export default class ReactNativeCalendarStrip extends Component<CalendarStripProps> {
   getSelectedDate: () => undefined | Date | string;
-  setSelectedDate: (date: Moment | string) => void;
+  setSelectedDate: (date: Date | string) => void;
   getNextWeek: () => void;
   getPreviousWeek: () => void;
-  updateWeekView: (date: Moment | string) => void;
+  updateWeekView: (date: Date | string) => void;
 }

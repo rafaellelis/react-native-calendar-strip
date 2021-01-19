@@ -34,7 +34,7 @@
     "postinstall": "node-git-hooks"
   },
   "dependencies": {
-    "moment": ">=2.0.0",
+    "date-fns": "^2.16.1",
     "node-git-hooks": "^1.0.1",
     "prop-types": "^15.6.0",
     "recyclerlistview": "^3.0.0"

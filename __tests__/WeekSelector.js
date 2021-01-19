@@ -1,13 +1,13 @@
 import React from "react";
 import { configure, shallow } from "enzyme";
 import Adapter from "enzyme-adapter-react-16";
-import moment from "moment";
+import { addWeeks } from "date-fns";
 
 import WeekSelector from "../src/WeekSelector";
 
 configure({ adapter: new Adapter() });
 
-const today = moment();
+const today = new Date();
 
 describe("WeekSelector Component", () => {
   it("should render without issues", () => {
@@ -15,7 +15,7 @@ describe("WeekSelector Component", () => {
       <WeekSelector
         controlDate={today}
         weekStartDate={today}
-        weekEndDate={today.clone().add(1, "week")}
+        weekEndDate={addWeeks(today, 1)}
         size={50}
       />
     );
