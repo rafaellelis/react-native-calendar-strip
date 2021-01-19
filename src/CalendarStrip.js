@@ -102,7 +102,7 @@ class CalendarStrip extends Component {
     updateWeek: true,
     iconLeft: require("./img/left-arrow-black.png"),
     iconRight: require("./img/right-arrow-black.png"),
-    calendarHeaderFormat: "MMMM YYYY",
+    calendarHeaderFormat: "MMMM yyyy",
     calendarHeaderPosition: "above",
     datesWhitelist: undefined,
     datesBlacklist: undefined,
@@ -212,9 +212,9 @@ class CalendarStrip extends Component {
     let _date = date;
     if (date) {
       _date = setHours(date, 12); // keep date the same regardless of timezone shifts
-      if (this.props.locale) {
-        _date = parse(format(_date, 'YYYY-MM-DD'), 'YYYY-MM-DD', new Date(), {locale: ptBR});
-      }
+      // if (this.props.locale) { //TODO: ajustar locale como parâmetro
+      _date = parse(format(_date, 'yyyy-MM-dd'), 'yyyy-MM-dd', new Date(), {locale: ptBR});
+      // }
     }
     return _date;
   }
@@ -485,7 +485,7 @@ class CalendarStrip extends Component {
       else {
         days.push(this.renderDay({
           date,
-          key: formataData(date, "YYYY-MM-DD"),
+          key: formataData(date, "yyyy-MM-dd"),
           ...this.createDayProps(selectedDate),
         }));
         datesList.push({date});

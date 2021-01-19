@@ -334,7 +334,7 @@ class CalendarDay extends Component {
   renderDots(marking) {
     const baseDotStyle = [styles.dot, styles.visibleDot];
     const markedDatesStyle = this.props.markedDatesStyle || {};
-    const formattedDate = formataData(this.props.date, "YYYY-MM-DD");
+    const formattedDate = formataData(this.props.date, "yyyy-MM-dd");
     let validDots = <View style={[styles.dot]} />; // default empty view for no dots case
 
     // Filter dots and process only those which have color property
@@ -506,14 +506,6 @@ class CalendarDay extends Component {
               dayContainerStyle,
             ]}
           >
-            {showDayName && (
-              <Text
-                style={[{ fontSize: dateNameFontSize }, _dateNameStyle]}
-                allowFontScaling={allowDayTextScaling}
-              >
-                {formataData(date, "ddd").toUpperCase()}
-              </Text>
-            )}
             {showDayNumber && (
               <View>
                 <Text
@@ -524,6 +516,14 @@ class CalendarDay extends Component {
                 </Text>
                 {this.renderMarking()}
               </View>
+            )}
+            {showDayName && (
+              <Text
+                style={[{ fontSize: dateNameFontSize }, _dateNameStyle]}
+                allowFontScaling={allowDayTextScaling}
+              >
+                {formataData(date, "EEE").toUpperCase()}
+              </Text>
             )}
           </View>
         </TouchableOpacity>

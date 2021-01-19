@@ -66,7 +66,7 @@ export default class App extends Component {
   }
 
   onDateSelected = date => {
-    this.setState({ formattedDate: format(date, 'YYYY-MM-DD')});
+    this.setState({ formattedDate: format(date, 'yyyy-MM-dd')});
   }
 
   render() {
